@@ -1,0 +1,55 @@
+# ------------------------------
+# Python
+# ------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+*.DS_Store
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Jupyter / Streamlit
+.ipynb_checkpoints/
+.streamlit/
+
+# ------------------------------
+# Environment / Secrets
+# ------------------------------
+.env
+*.env
+
+# Google ADK cache
+.adk/
+
+# ------------------------------
+# Logs & Temp Files
+# ------------------------------
+*.log
+tmp/
+temp/
+*.tmp
+
+# ------------------------------
+# Project-specific cache
+# ------------------------------
+memory_store.json
+session_cache.json
+
+# macOS generated
+.DS_Store
+
+# ------------------------------
+# IDE files
+# ------------------------------
+.vscode/
+.idea/
+*.swp
+
+# Node modules (if using JS in future)
+node_modules/
+
