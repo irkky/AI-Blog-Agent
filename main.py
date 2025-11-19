@@ -1,6 +1,7 @@
 # main.py
 import asyncio
 import time
+import traceback
 
 from dotenv import load_dotenv
 
@@ -79,11 +80,21 @@ def call_agent(runner: Runner, prompt: str, agent_name: str) -> str:
     content = types.Content(role="user", parts=[types.Part(text=prompt)])
 
     start = time.perf_counter()
-    events = runner.run(
-        user_id=USER_ID,
-        session_id=SESSION_ID,
-        new_message=content,
-    )
+    try:
+        events = runner.run(
+            user_id=USER_ID,
+            session_id=SESSION_ID,
+            new_message=content,
+        )
+    except Exception as exc:
+        error_msg = f"Error running {agent_name}: {exc}"
+        app_logger.log_error(
+            agent_name,
+            "run_exception",
+            error_msg,
+            extra={"traceback": traceback.format_exc()},
+        )
+        return error_msg
     duration = time.perf_counter() - start
 
     final_text = ""

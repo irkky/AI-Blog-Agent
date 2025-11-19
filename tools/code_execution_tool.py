@@ -14,7 +14,11 @@ from google.adk.tools.function_tool import FunctionTool
 
 class CodeExecutionTool(FunctionTool):
     def __init__(self):
-        super().__init__(self._execute)
+        def code_execution_tool(code: str) -> str:
+            return self._execute(code=code)
+
+        code_execution_tool.__name__ = "code_execution_tool"
+        super().__init__(code_execution_tool)
         self.name = "code_execution_tool"
         self.description = (
             "Executes sandboxed Python code and returns the value of `result`."

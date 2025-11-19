@@ -1,6 +1,6 @@
-# streamlit_app.py
 import asyncio
 import time
+import traceback
 from datetime import datetime
 
 import streamlit as st
@@ -89,11 +89,21 @@ def _run_agent(agent, prompt: str, agent_name: str) -> str:
     content = types.Content(role="user", parts=[types.Part(text=prompt)])
 
     start = time.perf_counter()
-    events = runner.run(
-        user_id=USER_ID,
-        session_id=SESSION_ID,
-        new_message=content,
-    )
+    try:
+        events = runner.run(
+            user_id=USER_ID,
+            session_id=SESSION_ID,
+            new_message=content,
+        )
+    except Exception as exc:
+        error_msg = f"Error running {agent_name}: {exc}"
+        app_logger.log_error(
+            agent_name,
+            "run_exception",
+            error_msg,
+            extra={"traceback": traceback.format_exc()},
+        )
+        return error_msg
     duration = time.perf_counter() - start
 
     final_text = ""
@@ -222,10 +232,12 @@ with tab_final:
     animated_box = st.empty()
 
 with tab_downloads:
-    st.info("Generate a blog first to enable downloads.")
+    if not st.session_state.get("latest_outputs"):
+        st.info("Generate a blog first to enable downloads.")
 
 with tab_steps:
-    st.info("Agent step outputs will appear here after generation.")
+    if not st.session_state.get("latest_outputs"):
+        st.info("Agent step outputs will appear here after generation.")
 
 with tab_console:
     console_placeholder = st.empty()
@@ -235,6 +247,7 @@ with tab_history:
     st.caption("Previous runs are stored locally in this session.")
 
 st.session_state.setdefault("run_history", [])
+st.session_state.setdefault("latest_outputs", None)
 
 
 def _record_history(entry: dict):
@@ -423,6 +436,19 @@ if generate_clicked:
             }
         )
 
+        st.session_state["latest_outputs"] = {
+            "topic": topic.strip(),
+            "tone": tone,
+            "audience": target_audience,
+            "word_count": word_count,
+            "final_text": final_output_text,
+            "research_text": research_text,
+            "outline_text": outline_text,
+            "draft_text": draft_text,
+            "critic_text": critic_text,
+            "eval_text": eval_text,
+        }
+
         # Final Blog Tab – with typewriter animation
         with tab_final:
             st.subheader("📝 Final SEO-Optimized Blog")
@@ -453,3 +479,56 @@ if generate_clicked:
 
         with tab_console:
             st.caption("Live logs from the 6-step agent pipeline.")
+
+
+latest_outputs = st.session_state.get("latest_outputs")
+if not generate_clicked and latest_outputs:
+    final_text = latest_outputs.get("final_text", "")
+
+    with tab_final:
+        if final_text:
+            animated_box.markdown(final_text)
+        else:
+            animated_box.info("Run the generator to view your blog content.")
+
+    with tab_downloads:
+        st.subheader("📦 Download Your Blog")
+        st.download_button(
+            label="⬇️ Download as Markdown (.md)",
+            data=final_text,
+            file_name="blog_article.md",
+            mime="text/markdown",
+            disabled=not final_text,
+        )
+        st.download_button(
+            label="⬇️ Download as Text (.txt)",
+            data=final_text,
+            file_name="blog_article.txt",
+            mime="text/plain",
+            disabled=not final_text,
+        )
+
+    with tab_steps:
+        st.subheader("🧩 Agent Step-by-Step Outputs")
+        step1 = st.expander("1️⃣ ResearchAgent Output", expanded=True)
+        step1.markdown(latest_outputs.get("research_text", "_No research output._"))
+
+        step2 = st.expander("2️⃣ OutlineAgent Output", expanded=auto_expand_steps)
+        step2.markdown(latest_outputs.get("outline_text", "_No outline output._"))
+
+        step3 = st.expander("3️⃣ DraftAgent Output", expanded=auto_expand_steps)
+        step3.markdown(latest_outputs.get("draft_text", "_No draft output._"))
+
+        step4 = st.expander("4️⃣ CriticAgent Output", expanded=auto_expand_steps)
+        step4.markdown(latest_outputs.get("critic_text", "_No critic output._"))
+
+        step5 = st.expander("5️⃣ SEOAgent Output (Final)", expanded=True)
+        step5.markdown(final_text or "_No SEO output._")
+
+        step6 = st.expander("6️⃣ EvaluationAgent Output", expanded=True)
+        with step6:
+            eval_text = latest_outputs.get("eval_text", "")
+            if eval_text:
+                st.code(eval_text, language="json")
+            else:
+                st.info("No evaluation output available.")

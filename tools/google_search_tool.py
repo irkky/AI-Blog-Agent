@@ -16,9 +16,12 @@ class GoogleSearchTool(FunctionTool):
     def __init__(self, model_id: str = MODEL_ID):
         self.model_id = model_id
         self._client_instance: Optional[Client] = None
-        super().__init__(self._search)
-        # Ensure the public name matches what the agents expect.
-        self.name = "google_search"
+
+        def google_search(query: str, *, fallback_summary: Optional[str] = None) -> str:
+            return self._search(query=query, fallback_summary=fallback_summary)
+
+        google_search.__name__ = "google_search"
+        super().__init__(google_search)
         self.description = (
             "Performs a grounded Google Search and returns a concise summary."
         )
