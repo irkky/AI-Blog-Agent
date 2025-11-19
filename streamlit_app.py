@@ -161,47 +161,121 @@ class ConsoleLogger:
 
 
 # ------------------------------------------------------------
+# Custom CSS for Enhanced UI
+# ------------------------------------------------------------
+def apply_custom_css():
+    st.markdown("""
+        <style>
+        /* Minimal styling - preserve Streamlit defaults */
+        .stExpander {
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 4px;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            border-radius: 6px;
+            padding: 0.6rem 1.2rem;
+        }
+        
+        /* Subtle button enhancement */
+        .stButton>button {
+            border-radius: 6px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .stButton>button:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Input fields */
+        .stTextInput>div>div>input,
+        .stTextArea>div>div>textarea {
+            border-radius: 6px;
+            padding: 0.6rem;
+        }
+        
+        /* Download button styling */
+        .stDownloadButton>button {
+            border-radius: 6px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            margin: 0.5rem 0;
+        }
+        
+        /* Code blocks */
+        .stCodeBlock {
+            border-radius: 6px;
+        }
+        
+        /* Expander headers */
+        .streamlit-expanderHeader {
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+# ------------------------------------------------------------
 # Streamlit page config
 # ------------------------------------------------------------
 st.set_page_config(
     page_title="AI Blog Production Agent",
     layout="wide",
     page_icon="🧠",
+    initial_sidebar_state="expanded"
 )
 
-st.title("🧠✍️ AI Blog Production Agent Suite")
-st.write(
-    "Generate research-backed, structured, SEO-optimized blog posts using a 5-step multi-agent workflow."
-)
+apply_custom_css()
 
-# Sidebar – settings
+# Hero Section
+st.markdown("""
+    <div style='text-align: center; padding: 1rem 0; margin-bottom: 1.5rem;'>
+        <h1 style='font-size: 2.5rem; margin-bottom: 0.5rem;'>🧠✍️ AI Blog Production Agent Suite</h1>
+        <p style='font-size: 1rem;'>
+            Generate research-backed, structured, SEO-optimized blog posts using a 5-step multi-agent workflow.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
+
+# Sidebar — settings with enhanced styling
 with st.sidebar:
-    st.header("⚙️ Generation Settings")
-
+    st.markdown("### ⚙️ Generation Settings")
+    
+    st.markdown("<div style='padding: 1rem 0;'>", unsafe_allow_html=True)
+    
     tone = st.selectbox(
-        "Tone",
+        "📢 Tone",
         ["Professional", "Casual", "Technical", "Beginner-friendly"],
         index=0,
     )
 
     target_audience = st.text_input(
-        "Target Audience",
+        "🎯 Target Audience",
         value="beginner developers",
         placeholder="e.g. indie hackers, students, marketers",
     )
 
     word_count = st.slider(
-        "Target Word Count",
+        "📝 Target Word Count",
         min_value=600,
         max_value=3000,
         value=1500,
         step=100,
     )
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
     extra_instructions = st.text_area(
-        "Extra Instructions (optional)",
+        "💡 Extra Instructions (optional)",
         placeholder="e.g. include code examples, avoid heavy math, use short paragraphs...",
         height=100,
     )
@@ -209,42 +283,53 @@ with st.sidebar:
     st.markdown("---")
 
     with st.expander("✨ Interactive Options", expanded=False):
-        enable_typewriter = st.toggle("Typewriter animation", value=True)
-        show_prompts = st.toggle("Show agent prompts", value=False)
-        auto_expand_steps = st.toggle("Auto-expand all steps", value=False)
+        enable_typewriter = st.toggle("⌨️ Typewriter animation", value=True)
+        show_prompts = st.toggle("🔍 Show agent prompts", value=False)
+        auto_expand_steps = st.toggle("📖 Auto-expand all steps", value=False)
 
+    st.markdown("---")
     st.caption("Built with Google ADK + Gemini")
 
-topic = st.text_input(
-    "Enter your blog topic",
-    placeholder="e.g. How multi-agent AI systems improve developer productivity",
-    key="topic_input",
-)
+# Main input section with enhanced styling
+st.markdown("<br>", unsafe_allow_html=True)
 
-generate_clicked = st.button("🚀 Generate Full Blog Article", type="primary")
+col1, col2 = st.columns([4, 1])
+with col1:
+    topic = st.text_input(
+        "💭 Enter your blog topic",
+        placeholder="e.g. How multi-agent AI systems improve developer productivity",
+        key="topic_input",
+        label_visibility="visible"
+    )
+with col2:
+    st.markdown("<br>", unsafe_allow_html=True)
+    generate_clicked = st.button("🚀 Generate", type="primary", use_container_width=True)
 
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Tabs with icons
 tab_final, tab_downloads, tab_steps, tab_console, tab_history = st.tabs(
-    ["📝 Final Blog", "📦 Downloads", "🧩 Agent Steps", "📟 Console Logs", "🗂 History"]
+    ["📄 Final Blog", "📦 Downloads", "🧩 Agent Steps", "📟 Console Logs", "🗂 History"]
 )
 
 with tab_final:
-    final_subheader = st.subheader("📝 Final SEO-Optimized Blog")
+    final_subheader = st.markdown("### 📄 Final SEO-Optimized Blog")
     animated_box = st.empty()
 
 with tab_downloads:
     if not st.session_state.get("latest_outputs"):
-        st.info("Generate a blog first to enable downloads.")
+        st.info("💡 Generate a blog first to enable downloads.")
 
 with tab_steps:
     if not st.session_state.get("latest_outputs"):
-        st.info("Agent step outputs will appear here after generation.")
+        st.info("💡 Agent step outputs will appear here after generation.")
 
 with tab_console:
     console_placeholder = st.empty()
     console = ConsoleLogger(console_placeholder)
 
 with tab_history:
-    st.caption("Previous runs are stored locally in this session.")
+    st.caption("📚 Previous runs are stored locally in this session.")
 
 st.session_state.setdefault("run_history", [])
 st.session_state.setdefault("latest_outputs", None)
@@ -258,14 +343,14 @@ def _record_history(entry: dict):
 
 with tab_history:
     if not st.session_state["run_history"]:
-        st.info("Generate at least one article to see history here.")
+        st.info("💡 Generate at least one article to see history here.")
     else:
-        clear_history = st.button("🧹 Clear history")
+        clear_history = st.button("🧹 Clear history", use_container_width=True)
         if clear_history:
             st.session_state["run_history"] = []
             st.rerun()
         for idx, run in enumerate(st.session_state["run_history"]):
-            label = f"{run['topic']} — {run['timestamp']}"
+            label = f"📝 {run['topic']} — {run['timestamp']}"
             with st.expander(label, expanded=(idx == 0)):
                 st.markdown(run["final_text"])
                 st.caption(
@@ -287,7 +372,7 @@ st.session_state.setdefault("animated_done", False)
 
 if generate_clicked:
     if not topic.strip():
-        st.warning("Please enter a topic first.")
+        st.warning("⚠️ Please enter a topic first.")
     else:
         st.session_state["animated_done"] = False
 
@@ -299,13 +384,13 @@ if generate_clicked:
         base_context = build_base_context()
 
         with tab_steps:
-            st.subheader("🧩 Agent Step-by-Step Outputs")
-            step1 = st.expander("1️⃣ ResearchAgent Output", expanded=True)
-            step2 = st.expander("2️⃣ OutlineAgent Output", expanded=auto_expand_steps)
-            step3 = st.expander("3️⃣ DraftAgent Output", expanded=auto_expand_steps)
-            step4 = st.expander("4️⃣ CriticAgent Output", expanded=auto_expand_steps)
-            step5 = st.expander("5️⃣ SEOAgent Output (Final)", expanded=True)
-            step6 = st.expander("6️⃣ EvaluationAgent Output", expanded=True)
+            st.markdown("### 🧩 Agent Step-by-Step Outputs")
+            step1 = st.expander("1️⃣ 🔬 ResearchAgent Output", expanded=True)
+            step2 = st.expander("2️⃣ 📋 OutlineAgent Output", expanded=auto_expand_steps)
+            step3 = st.expander("3️⃣ ✍️ DraftAgent Output", expanded=auto_expand_steps)
+            step4 = st.expander("4️⃣ 🧐 CriticAgent Output", expanded=auto_expand_steps)
+            step5 = st.expander("5️⃣ 🚀 SEOAgent Output (Final)", expanded=True)
+            step6 = st.expander("6️⃣ 📊 EvaluationAgent Output", expanded=True)
 
         # STEP 1: ResearchAgent
         progress.progress(10)
@@ -316,7 +401,7 @@ if generate_clicked:
         research_text = truncate_text(research_text, max_chars=6000)
         with step1:
             if show_prompts:
-                st.markdown("**Prompt Sent**")
+                st.markdown("**📝 Prompt Sent**")
                 st.code(research_prompt, language="markdown")
             st.markdown(research_text)
 
@@ -336,7 +421,7 @@ if generate_clicked:
         outline_text = truncate_text(outline_text, max_chars=6000)
         with step2:
             if show_prompts:
-                st.markdown("**Prompt Sent**")
+                st.markdown("**📝 Prompt Sent**")
                 st.code(outline_prompt, language="markdown")
             st.markdown(outline_text)
 
@@ -345,7 +430,7 @@ if generate_clicked:
         progress.progress(45)
 
         # STEP 3: DraftAgent
-        console.log("✍️ [Step 3] DraftAgent: writing full draft...")
+        console.log("✏️ [Step 3] DraftAgent: writing full draft...")
         draft_prompt = (
             base_context
             + "\n\nUsing this outline, write the full markdown blog draft:\n\n"
@@ -356,7 +441,7 @@ if generate_clicked:
         draft_text = truncate_text(draft_text, max_chars=9000)
         with step3:
             if show_prompts:
-                st.markdown("**Prompt Sent**")
+                st.markdown("**📝 Prompt Sent**")
                 st.code(draft_prompt, language="markdown")
             st.markdown(draft_text)
 
@@ -375,7 +460,7 @@ if generate_clicked:
         critic_text = truncate_text(critic_text, max_chars=9000)
         with step4:
             if show_prompts:
-                st.markdown("**Prompt Sent**")
+                st.markdown("**📝 Prompt Sent**")
                 st.code(critic_prompt, language="markdown")
             st.markdown(critic_text)
 
@@ -399,7 +484,7 @@ if generate_clicked:
         final_output_text = _run_agent(seo_agent, seo_prompt, "seo_agent")
         with step5:
             if show_prompts:
-                st.markdown("**Prompt Sent**")
+                st.markdown("**📝 Prompt Sent**")
                 st.code(seo_prompt, language="markdown")
             st.markdown(final_output_text)
 
@@ -415,7 +500,7 @@ if generate_clicked:
         eval_text = _run_agent(evaluation_agent, eval_prompt, "evaluation_agent")
         with step6:
             if show_prompts:
-                st.markdown("**Prompt Sent**")
+                st.markdown("**📝 Prompt Sent**")
                 st.code(eval_prompt, language="markdown")
             st.code(eval_text, language="json")
 
@@ -423,7 +508,7 @@ if generate_clicked:
         console.log("🎉 Pipeline finished successfully.")
         console.separator()
         progress.progress(100)
-        st.toast("Blog generation complete!", icon="✅")
+        st.toast("🎉 Blog generation complete!", icon="✅")
 
         _record_history(
             {
@@ -449,9 +534,9 @@ if generate_clicked:
             "eval_text": eval_text,
         }
 
-        # Final Blog Tab – with typewriter animation
+        # Final Blog Tab — with typewriter animation
         with tab_final:
-            st.subheader("📝 Final SEO-Optimized Blog")
+            st.markdown("### 📄 Final SEO-Optimized Blog")
             animated_box = st.empty()
 
             if enable_typewriter and not st.session_state.get("animated_done", False):
@@ -463,22 +548,27 @@ if generate_clicked:
 
         # Downloads Tab
         with tab_downloads:
-            st.subheader("📦 Download Your Blog")
-            st.download_button(
-                label="⬇️ Download as Markdown (.md)",
-                data=final_output_text,
-                file_name="blog_article.md",
-                mime="text/markdown",
-            )
-            st.download_button(
-                label="⬇️ Download as Text (.txt)",
-                data=final_output_text,
-                file_name="blog_article.txt",
-                mime="text/plain",
-            )
+            st.markdown("### 📦 Download Your Blog")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.download_button(
+                    label="⬇️ Download as Markdown (.md)",
+                    data=final_output_text,
+                    file_name="blog_article.md",
+                    mime="text/markdown",
+                    use_container_width=True
+                )
+            with col2:
+                st.download_button(
+                    label="⬇️ Download as Text (.txt)",
+                    data=final_output_text,
+                    file_name="blog_article.txt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
 
         with tab_console:
-            st.caption("Live logs from the 6-step agent pipeline.")
+            st.caption("📡 Live logs from the 6-step agent pipeline.")
 
 
 latest_outputs = st.session_state.get("latest_outputs")
@@ -489,43 +579,48 @@ if not generate_clicked and latest_outputs:
         if final_text:
             animated_box.markdown(final_text)
         else:
-            animated_box.info("Run the generator to view your blog content.")
+            animated_box.info("💡 Run the generator to view your blog content.")
 
     with tab_downloads:
-        st.subheader("📦 Download Your Blog")
-        st.download_button(
-            label="⬇️ Download as Markdown (.md)",
-            data=final_text,
-            file_name="blog_article.md",
-            mime="text/markdown",
-            disabled=not final_text,
-        )
-        st.download_button(
-            label="⬇️ Download as Text (.txt)",
-            data=final_text,
-            file_name="blog_article.txt",
-            mime="text/plain",
-            disabled=not final_text,
-        )
+        st.markdown("### 📦 Download Your Blog")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                label="⬇️ Download as Markdown (.md)",
+                data=final_text,
+                file_name="blog_article.md",
+                mime="text/markdown",
+                disabled=not final_text,
+                use_container_width=True
+            )
+        with col2:
+            st.download_button(
+                label="⬇️ Download as Text (.txt)",
+                data=final_text,
+                file_name="blog_article.txt",
+                mime="text/plain",
+                disabled=not final_text,
+                use_container_width=True
+            )
 
     with tab_steps:
-        st.subheader("🧩 Agent Step-by-Step Outputs")
-        step1 = st.expander("1️⃣ ResearchAgent Output", expanded=True)
+        st.markdown("### 🧩 Agent Step-by-Step Outputs")
+        step1 = st.expander("1️⃣ 🔬 ResearchAgent Output", expanded=True)
         step1.markdown(latest_outputs.get("research_text", "_No research output._"))
 
-        step2 = st.expander("2️⃣ OutlineAgent Output", expanded=auto_expand_steps)
+        step2 = st.expander("2️⃣ 📋 OutlineAgent Output", expanded=auto_expand_steps)
         step2.markdown(latest_outputs.get("outline_text", "_No outline output._"))
 
-        step3 = st.expander("3️⃣ DraftAgent Output", expanded=auto_expand_steps)
+        step3 = st.expander("3️⃣ ✍️ DraftAgent Output", expanded=auto_expand_steps)
         step3.markdown(latest_outputs.get("draft_text", "_No draft output._"))
 
-        step4 = st.expander("4️⃣ CriticAgent Output", expanded=auto_expand_steps)
+        step4 = st.expander("4️⃣ 🧐 CriticAgent Output", expanded=auto_expand_steps)
         step4.markdown(latest_outputs.get("critic_text", "_No critic output._"))
 
-        step5 = st.expander("5️⃣ SEOAgent Output (Final)", expanded=True)
+        step5 = st.expander("5️⃣ 🚀 SEOAgent Output (Final)", expanded=True)
         step5.markdown(final_text or "_No SEO output._")
 
-        step6 = st.expander("6️⃣ EvaluationAgent Output", expanded=True)
+        step6 = st.expander("6️⃣ 📊 EvaluationAgent Output", expanded=True)
         with step6:
             eval_text = latest_outputs.get("eval_text", "")
             if eval_text:
