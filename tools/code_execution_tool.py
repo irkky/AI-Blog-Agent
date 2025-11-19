@@ -1,11 +1,3 @@
-# tools/code_execution_tool.py
-"""
-CodeExecutionTool
------------------
-
-Executes small Python snippets in a restricted namespace.
-"""
-
 import traceback
 from typing import Any, Dict
 
@@ -25,12 +17,6 @@ class CodeExecutionTool(FunctionTool):
         )
 
     def _execute(self, code: str) -> str:
-        """
-        Execute trusted Python code.
-
-        Args:
-            code: Python snippet that assigns to a variable named `result`.
-        """
         code = (code or "").strip()
         if not code:
             return "Error: 'code' field missing."

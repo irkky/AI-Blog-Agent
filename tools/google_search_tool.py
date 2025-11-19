@@ -1,4 +1,3 @@
-# tools/google_search_tool.py
 from typing import Optional
 
 from google.adk.tools.function_tool import FunctionTool
@@ -9,9 +8,6 @@ MODEL_ID = "gemini-2.5-flash"
 
 
 class GoogleSearchTool(FunctionTool):
-    """
-    Wraps a grounded Gemini search into a FunctionTool so agents can call it.
-    """
 
     def __init__(self, model_id: str = MODEL_ID):
         self.model_id = model_id

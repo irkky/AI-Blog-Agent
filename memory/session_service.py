@@ -1,17 +1,8 @@
-# memory/session_service.py
 from typing import Any, Dict
 import threading
 
 
 class SimpleSessionService:
-    """
-    Very small key/value store scoped by session_id.
-
-    Example:
-      session_service.set("session1", "tone", "Professional")
-      session_service.get("session1", "tone")
-    """
-
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._sessions: Dict[str, Dict[str, Any]] = {}

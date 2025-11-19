@@ -1,4 +1,3 @@
-# tools/user_profile_tool.py
 from typing import Literal, Optional
 
 from google.adk.tools.function_tool import FunctionTool
@@ -8,10 +7,6 @@ from memory.session_service import session_service
 
 
 class UserProfileTool(FunctionTool):
-    """
-    Stores and retrieves user writing preferences and history.
-    """
-
     def __init__(self):
         super().__init__(self._manage_profile)
         self.name = "user_profile_tool"

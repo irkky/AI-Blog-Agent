@@ -1,21 +1,8 @@
-# memory/memory_bank.py
 from typing import Any, Dict, List
 import threading
 
 
 class MemoryBank:
-    """
-    Simple in-process long-term memory.
-
-    Stores arbitrary keys:
-      - tone
-      - audience
-      - preferred_word_count
-      - favorite_intros
-      - blog_history
-      - seo_keywords
-    """
-
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._store: Dict[str, Any] = {}

@@ -1,4 +1,3 @@
-# blog_agents/evaluation_agent.py
 from google.adk.agents import LlmAgent
 
 

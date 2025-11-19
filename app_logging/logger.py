@@ -1,4 +1,3 @@
-# app_logging/logger.py
 import json
 import os
 import time
