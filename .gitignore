@@ -5,7 +5,9 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.pytest_cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 *.DS_Store
 
 # Virtual environments
@@ -30,9 +32,14 @@ venv/
 # Logs & Temp Files
 # ------------------------------
 *.log
+*.jsonl
+logs/
 tmp/
 temp/
 *.tmp
+.coverage
+coverage.xml
+htmlcov/
 
 # ------------------------------
 # Project-specific cache

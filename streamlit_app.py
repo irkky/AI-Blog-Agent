@@ -45,6 +45,24 @@ tools = [
 ]
 
 
+def _assign_tools_to_agents(agent_list, tool_instances):
+    for _agent in agent_list:
+        _agent.tools = list(tool_instances)
+
+
+_assign_tools_to_agents(
+    [
+        research_agent,
+        outline_agent,
+        draft_agent,
+        critic_agent,
+        seo_agent,
+        evaluation_agent,
+    ],
+    tools,
+)
+
+
 async def _ensure_session():
     try:
         await session_service.create_session(
@@ -66,7 +84,6 @@ def _run_agent(agent, prompt: str, agent_name: str) -> str:
         session_service=session_service,
         artifact_service=artifact_service,
         memory_service=memory_service,
-        tools=tools,
     )
 
     content = types.Content(role="user", parts=[types.Part(text=prompt)])
