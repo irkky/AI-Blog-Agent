@@ -1,5 +1,5 @@
-google-adk
-google-genai
-streamlit
-python-dotenv
-google-auth
+google-adk>=0.1.0
+google-genai>=0.3.0
+streamlit>=1.32.0
+python-dotenv==1.0.1
+google-auth>=2.29.0
