@@ -1,4 +1,4 @@
-# 🧠✍️ AI Blog Production Agent
+# 🧠✍️ AI Blog Agent
 
 <div align="center">
 
@@ -44,7 +44,7 @@
 
 ## 🌟 Overview
 
-The **AI Blog Production Agent** is an end-to-end autonomous content creation system that transforms a simple topic into a fully optimized, research-backed blog article. Built with **Google ADK** and **Gemini 2.5**, this multi-agent system eliminates hours of manual research, writing, and optimization.
+The **AI Blog Agent** is an end-to-end autonomous content creation system that transforms a simple topic into a fully optimized, research-backed blog article. Built with **Google ADK** and **Gemini 2.5**, this multi-agent system eliminates hours of manual research, writing, and optimization.
 
 ### Why This Project?
 
