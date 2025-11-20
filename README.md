@@ -217,13 +217,18 @@ Input → Research → Outline → Draft → Critic → SEO → Evaluation → O
 ### 1. Google Search Tool
 
 ```python
-google_search(query: str) -> str
+google_search(query: str, fallback_summary: Optional[str] = None) -> str
 ```
 
 - **Type:** Grounded search via Gemini 2.5
 - **Purpose:** Real-time web information retrieval
 - **Integration:** Native Gemini `google_search` capability
 - **Use Cases:** Current events, statistics, fact-checking
+- **Features:**
+  - Natural language query processing
+  - Automatic result summarization
+  - Fallback summary support
+  - Error handling
 
 ### 2. Code Execution Tool
 
@@ -239,6 +244,7 @@ code_execution_tool(code: str) -> str
   - Word count calculations
   - Basic data processing
 - **Safety:** Restricted namespace with limited built-ins
+- **Return Value:** Contents of `result` variable after execution
 
 ### 3. User Profile Tool
 
@@ -253,6 +259,10 @@ user_profile_tool(
 
 - **Type:** Persistent storage interface
 - **Purpose:** User preference management
+- **Operations:**
+  - **get**: Retrieve stored preferences
+  - **set**: Store new preferences
+  - **append**: Add to list-based preferences
 - **Stores:**
   - Writing tone preferences
   - Target audiences
@@ -295,6 +305,13 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+
+**Dependencies include:**
+- `google-adk>=0.1.0` - Google Agent Development Kit
+- `google-genai>=0.3.0` - Google Generative AI SDK
+- `streamlit>=1.32.0` - Web UI framework
+- `python-dotenv==1.0.1` - Environment variable management
+- `google-auth>=2.29.0` - Google authentication
 
 ### Step 4: Configure Environment
 
@@ -350,7 +367,15 @@ The app will open at `http://localhost:8501`
 - 📦 **Downloads** - Export as `.md` or `.txt`
 - 🧩 **Agent Steps** - View each agent's output
 - 📟 **Console Logs** - Real-time pipeline monitoring
-- 🗂 **History** - Access previous generations
+- 🗂 **History** - Access previous generations (up to 10)
+
+**Enhanced UI Features:**
+- Clean, modern interface with rounded corners
+- Smooth hover transitions on buttons
+- Live progress bar during generation
+- Real-time console logging
+- Toast notifications on completion
+- Session-based history management
 
 ### 🖥 Option 2: CLI Mode
 
@@ -413,8 +438,10 @@ ai_blog_agent/
 ├── 📄 streamlit_app.py          # Web UI entry point
 ├── 📄 config.py                 # Configuration management
 ├── 📄 requirements.txt          # Python dependencies
+├── 📄 Dockerfile                # Docker containerization
 ├── 📄 .env.example              # Environment template
 ├── 📄 .gitignore                # Git ignore rules
+├── 📄 LICENSE                   # MIT License
 └── 📄 README.md                 # This file
 ```
 
@@ -428,9 +455,27 @@ ai_blog_agent/
 |----------|----------|---------|-------------|
 | `GOOGLE_API_KEY` | ✅ Yes | - | Google Gemini API key |
 | `GEMINI_MODEL_ID` | No | `gemini-2.5-flash` | Model identifier |
-| `APP_NAME` | No | `AI_BLOG_AGENT` | Application name |
+| `APP_NAME` | No | `AI_BLOG_PRODUCTION_AGENT` | Application name |
 | `ENVIRONMENT` | No | `development` | Runtime environment |
 | `DEBUG_MODE` | No | `False` | Enable debug logging |
+
+### Configuration Class
+
+The `config.py` module provides a centralized configuration management system:
+
+```python
+from config import config
+
+print(config.GOOGLE_API_KEY)  # Access API key
+print(config.GEMINI_MODEL_ID)  # Access model ID
+print(config.DEBUG_MODE)  # Check debug status
+```
+
+**Features:**
+- Automatic validation of required fields
+- Environment variable loading via `python-dotenv`
+- Raises `ConfigError` if `GOOGLE_API_KEY` is missing
+- Provides sensible defaults for optional settings
 
 ### Model Configuration
 
@@ -456,24 +501,58 @@ agent = LlmAgent(
 - **Scope:** Current session only
 - **Lifecycle:** Cleared when session ends
 - **Storage:** In-memory dictionary
+- **Implementation:** `memory/session_service.py`
 - **Use Cases:**
   - Current generation parameters
   - Agent-to-agent state passing
   - Temporary user inputs
+  - Session-specific overrides
+
+**API:**
+```python
+from memory.session_service import session_service
+
+# Store session data
+session_service.set(session_id, "tone", "Professional")
+
+# Retrieve session data
+tone = session_service.get(session_id, "tone", default="Casual")
+
+# Dump all sessions
+all_sessions = session_service.dump()
+```
 
 #### 2. Long-Term Memory (Memory Bank)
 - **Scope:** Persistent across sessions
 - **Lifecycle:** Survives restarts
 - **Storage:** Thread-safe in-memory store
+- **Implementation:** `memory/memory_bank.py`
 - **Use Cases:**
   - User writing preferences
   - Historical blog topics
   - SEO keyword library
   - Favorite writing styles
 
+**API:**
+```python
+from memory.memory_bank import memory_bank
+
+# Store persistent data
+memory_bank.set("preferred_tone", "Technical")
+
+# Retrieve persistent data
+tone = memory_bank.get("preferred_tone", default="Professional")
+
+# Append to lists
+memory_bank.append_to_list("topic_history", "AI Agents")
+
+# Get all data
+all_data = memory_bank.all()
+```
+
 ### Context Compaction
 
-The `context_manager.py` implements intelligent truncation to prevent token overflow:
+The `utils/context_manager.py` implements intelligent truncation to prevent token overflow:
 
 ```python
 def truncate_text(text: str, max_chars: int = 8000) -> str:
@@ -494,6 +573,7 @@ def truncate_text(text: str, max_chars: int = 8000) -> str:
 - Preserved context quality
 - Predictable costs
 - Stable performance
+- Maintains beginning and end context
 
 ---
 
@@ -533,6 +613,32 @@ All events are logged to `logs/events.jsonl` in structured format:
 - 🔍 **Tool Usage:** Which tools were called
 - 📊 **Quality Scores:** Evaluation metrics
 
+### AppLogger Class
+
+The `app_logging/logger.py` module provides a simple JSONL logging interface:
+
+```python
+from app_logging.logger import app_logger
+
+# Log successful agent run
+app_logger.log_event(
+    event_type="agent_run",
+    agent="research_agent",
+    step="run",
+    duration_sec=2.45,
+    message="Completed successfully",
+    extra={"chars_out": 3421}
+)
+
+# Log errors
+app_logger.log_error(
+    agent="draft_agent",
+    step="generation",
+    message="Failed to generate content",
+    extra={"error_type": "timeout"}
+)
+```
+
 ### Analyzing Logs
 
 ```python
@@ -548,6 +654,13 @@ research_times = [
 ]
 avg_duration = sum(research_times) / len(research_times)
 print(f"Average research time: {avg_duration:.2f}s")
+
+# Count errors by agent
+error_counts = {}
+for e in events:
+    if e["event_type"] == "error":
+        agent = e["agent"]
+        error_counts[agent] = error_counts.get(agent, 0) + 1
 ```
 
 ---
@@ -582,6 +695,15 @@ The **EvaluationAgent** scores content across five dimensions:
    - Holistic quality assessment
    - Publication readiness
 
+### Evaluation Process
+
+The EvaluationAgent:
+1. Receives the final blog article
+2. Considers tone, audience, and word count targets
+3. Analyzes against all five dimensions
+4. Returns structured JSON with scores and comments
+5. Logs results for observability
+
 ### Sample Evaluation Output
 
 ```json
@@ -593,6 +715,22 @@ The **EvaluationAgent** scores content across five dimensions:
   "overall": 9,
   "comments": "Well-structured and highly actionable. SEO could include more long-tail keywords."
 }
+```
+
+### Implementation
+
+The agent uses Gemini 2.5 Flash with specific instructions to return only JSON:
+
+```python
+evaluation_agent = EvaluationAgent(
+    name="evaluation_agent",
+    model="gemini-2.5-flash",
+    instruction="""
+    You are EvaluationAgent.
+    Evaluate articles on clarity, structure, SEO, usefulness, and overall quality.
+    Return ONLY JSON with scores (1-10) and comments.
+    """
+)
 ```
 
 ---
@@ -617,8 +755,11 @@ This project fulfills all requirements for the **Kaggle 5-Day AI Agents Intensiv
 - 🌐 **Dual Interface** - Web UI + CLI
 - 🔍 **Grounded Search** - Real-time Google integration
 - 📦 **Export Options** - Markdown and text downloads
-- 📚 **History** - Session-based generation tracking
-- 🎨 **UX Polish** - Typewriter animation, live logs
+- 📚 **History** - Session-based generation tracking (up to 10)
+- 🎨 **UX Polish** - Typewriter animation, live logs, toast notifications
+- 🐳 **Docker Support** - Containerized deployment
+- 🔒 **Type Safety** - Type hints throughout codebase
+- 📖 **Documentation** - Comprehensive inline documentation
 
 ---
 
@@ -685,9 +826,10 @@ ConfigError: Missing GOOGLE_API_KEY in environment
 ```
 
 **Solution:**
-- Verify `.env` file exists
-- Check API key is correctly copied
-- Ensure no extra spaces in key
+- Verify `.env` file exists in project root
+- Check API key is correctly copied (no extra spaces)
+- Ensure `.env` file is not in `.gitignore` locally
+- Restart application after creating `.env`
 
 #### 2. Import Errors
 
@@ -697,7 +839,11 @@ ModuleNotFoundError: No module named 'google.adk'
 
 **Solution:**
 ```bash
+# Upgrade to latest versions
 pip install --upgrade google-adk google-genai
+
+# Or reinstall all dependencies
+pip install -r requirements.txt
 ```
 
 #### 3. Empty Responses
@@ -707,10 +853,11 @@ Error: No final response from agent
 ```
 
 **Solution:**
-- Check internet connection (for Google Search)
+- Check internet connection (required for Google Search)
 - Verify API quota not exceeded
-- Try simpler topic
-- Check logs at `logs/events.jsonl`
+- Try simpler topic first
+- Check logs at `logs/events.jsonl` for detailed errors
+- Ensure `GOOGLE_API_KEY` is valid
 
 #### 4. Streamlit Port Conflicts
 
@@ -722,11 +869,25 @@ OSError: [Errno 98] Address already in use
 ```bash
 # Use different port
 streamlit run streamlit_app.py --server.port 8502
+
+# Or kill existing Streamlit process
+pkill -f streamlit
 ```
+
+#### 5. Session Errors
+
+```
+Session already exists
+```
+
+**Solution:**
+- This is expected behavior and handled automatically
+- The application continues normally
+- Check logs to verify session creation
 
 ### Debug Mode
 
-Enable detailed logging:
+Enable detailed logging in `.env`:
 
 ```env
 DEBUG_MODE=True
@@ -735,8 +896,26 @@ DEBUG_MODE=True
 View logs in real-time:
 
 ```bash
+# Using tail and jq for pretty formatting
 tail -f logs/events.jsonl | jq .
+
+# Or simple tail
+tail -f logs/events.jsonl
 ```
+
+### Docker Deployment
+
+Build and run the containerized version:
+
+```bash
+# Build image
+docker build -t ai-blog-agent .
+
+# Run container
+docker run -p 8501:8501 --env-file .env ai-blog-agent
+```
+
+Access at `http://localhost:8501`
 
 ---
 
@@ -748,7 +927,7 @@ We welcome contributions! Here's how to get started:
 
 ```bash
 # Fork and clone
-git https://github.com/irkky/AI-Blog-Agent.git
+git clone https://github.com/irkky/AI-Blog-Agent.git
 cd AI-Blog-Agent
 
 # Create feature branch
@@ -776,6 +955,14 @@ pip install -r requirements.txt
 4. Update CHANGELOG.md
 5. Submit PR with clear description
 
+### Code Style
+
+- Follow PEP 8 guidelines
+- Use type hints
+- Add docstrings to functions
+- Keep functions focused and small
+- Write descriptive commit messages
+
 ---
 
 ## 📝 License
@@ -796,6 +983,14 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
 
 ---
