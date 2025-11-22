@@ -76,7 +76,6 @@ async def _ensure_session():
 
 asyncio.run(_ensure_session())
 
-
 def _run_agent(agent, prompt: str, agent_name: str) -> str:
     runner = Runner(
         app_name=APP_NAME,
@@ -104,15 +103,20 @@ def _run_agent(agent, prompt: str, agent_name: str) -> str:
             extra={"traceback": traceback.format_exc()},
         )
         return error_msg
-    duration = time.perf_counter() - start
+
+    # REMOVED: duration = time.perf_counter() - start  <-- deleted from here
 
     final_text = ""
+    # The agent actually "thinks" and generates text inside this loop
     for event in events:
         if hasattr(event, "is_final_response") and event.is_final_response():
             if event.content and event.content.parts:
                 for part in event.content.parts:
                     if getattr(part, "text", None):
                         final_text += part.text
+
+    # MOVED HERE: Stop the timer after the work is done
+    duration = time.perf_counter() - start 
 
     if not final_text.strip():
         msg = "Error: No final response from agent."
@@ -128,6 +132,7 @@ def _run_agent(agent, prompt: str, agent_name: str) -> str:
         extra={"chars_out": len(final_text)},
     )
     return final_text.strip()
+
 
 # ------------------------------------------------------------
 # TYPEWRITER ANIMATION EFFECT
