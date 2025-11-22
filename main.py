@@ -1,4 +1,3 @@
-%%writefile main.py
 import asyncio
 import time
 import traceback
