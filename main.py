@@ -1,3 +1,4 @@
+%%writefile main.py
 import asyncio
 import time
 import traceback
@@ -62,9 +63,7 @@ async def _ensure_session():
 asyncio.run(_ensure_session())
 
 def call_agent(runner: Runner, prompt: str, agent_name: str) -> str:
-    """Call agent via Runner.run(new_message=...). Collect logs/metrics."""
     content = types.Content(role="user", parts=[types.Part(text=prompt)])
-
     start = time.perf_counter()
     try:
         events = runner.run(
@@ -74,25 +73,18 @@ def call_agent(runner: Runner, prompt: str, agent_name: str) -> str:
         )
     except Exception as exc:
         error_msg = f"Error running {agent_name}: {exc}"
-        app_logger.log_error(
-            agent_name,
-            "run_exception",
-            error_msg,
-            extra={"traceback": traceback.format_exc()},
-        )
+        app_logger.log_error(agent_name, "run_exception", error_msg, extra={"traceback": traceback.format_exc()})
         return error_msg
 
     final_text = ""
-    # The agent does the work inside this loop
     for event in events:
         if hasattr(event, "is_final_response") and event.is_final_response():
             if event.content and event.content.parts:
                 for part in event.content.parts:
                     if getattr(part, "text", None):
                         final_text += part.text
-
-    # <--- FIX: Timer Stops AFTER the loop finishes
-    duration = time.perf_counter() - start 
+    
+    duration = time.perf_counter() - start
 
     if not final_text.strip():
         msg = "Error: No final response from agent."
@@ -130,24 +122,46 @@ def run_agent_pipeline(topic: str, tone: str, audience: str, word_count: str) ->
     r1 = _build_runner(research_agent)
     research_prompt = base + "\nYou are ResearchAgent. Provide structured notes using google_search tool when helpful."
     research_text = call_agent(r1, research_prompt, "research_agent")
+    
+    print("\n🔹 RESEARCH_OUTPUT 🔹")
+    print(research_text)
+    print("🔹 END_RESEARCH 🔹\n")
+    
     research_text = truncate_text(research_text, max_chars=6000)
 
     # 2 — Outline Agent
     r2 = _build_runner(outline_agent)
     outline_prompt = base + "\nCreate a detailed outline from this research:\n" + research_text
     outline_text = call_agent(r2, outline_prompt, "outline_agent")
+    
+    print("\n🔸 OUTLINE_OUTPUT 🔸")
+    print(outline_text)
+    print("🔸 END_OUTLINE 🔸\n")
+    
     outline_text = truncate_text(outline_text, max_chars=6000)
 
     # 3 — Draft Agent
     r3 = _build_runner(draft_agent)
     draft_prompt = base + "\nWrite the full blog from this outline:\n" + outline_text
     draft_text = call_agent(r3, draft_prompt, "draft_agent")
+    
+    # NEW MARKER ADDED HERE 👇
+    print("\n🔹 DRAFT_OUTPUT 🔹")
+    print(draft_text)
+    print("🔹 END_DRAFT 🔹\n")
+    
     draft_text = truncate_text(draft_text, max_chars=9000)
 
     # 4 — Critic Agent
     r4 = _build_runner(critic_agent)
     critic_prompt = "Improve clarity & flow of this markdown blog:\n" + draft_text
     critic_text = call_agent(r4, critic_prompt, "critic_agent")
+    
+    # NEW MARKER ADDED HERE 👇
+    print("\n🔹 CRITIC_OUTPUT 🔹")
+    print(critic_text)
+    print("🔹 END_CRITIC 🔹\n")
+    
     critic_text = truncate_text(critic_text, max_chars=9000)
 
     # 5 — SEO Agent
@@ -182,10 +196,9 @@ def run_agent_pipeline(topic: str, tone: str, audience: str, word_count: str) ->
     return final_text
 
 def main():
+    import sys
     print("\n🧠 AI Blog Production Agent (CLI Mode)")
     try:
-        # Simple CLI args parsing for non-interactive runs
-        import sys
         if not sys.stdin.isatty():
             lines = sys.stdin.read().splitlines()
             if len(lines) >= 4:
@@ -194,7 +207,6 @@ def main():
                 audience = lines[2]
                 wc = lines[3]
             else:
-                # Fallback
                 topic = "AI Agents"
                 tone = "Professional"
                 audience = "Developers"
