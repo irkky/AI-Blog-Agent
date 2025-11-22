@@ -14,7 +14,12 @@
 
 [Features](#-features) • [Architecture](#-architecture) • [Installation](#-installation) • [Usage](#-usage)
 
+
+[![Kaggle Write-up](https://img.shields.io/badge/Kaggle%20Write--up-667eea?style=for-the-badge&logo=kaggle&logoColor=white)](https://www.kaggle.com/code/rishabhkannaujiya/ai-blog-agent-capstone-submission-concierge)
+[![YouTube Demo](https://img.shields.io/badge/YouTube%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=kQpODXEVUUI)
+
 </div>
+
 
 ---
 
@@ -24,7 +29,6 @@
 - [Features](#-features)
 - [Architecture](#-architecture)
 - [Multi-Agent Workflow](#-multi-agent-workflow)
-- [Tools & Capabilities](#-tools--capabilities)
 - [Installation](#-installation)
 - [Usage](#-usage)
   - [Web UI (Streamlit)](#-option-1-streamlit-web-app-recommended)
@@ -34,7 +38,6 @@
 - [Memory & Context Management](#-memory--context-management)
 - [Observability](#-observability)
 - [Agent Evaluation](#-agent-evaluation)
-- [Kaggle Capstone Requirements](#-kaggle-capstone-requirements)
 - [Examples](#-examples)
 - [Troubleshooting](#-troubleshooting)
 - [Contributing](#-contributing)
@@ -62,17 +65,90 @@ Modern content creators face a time-consuming workflow:
 
 ### 🎯 Core Capabilities
 
-| Feature | Description |
-|---------|-------------|
-| **6-Agent Workflow** | Specialized agents for research, outlining, drafting, critique, SEO, and evaluation |
-| **Grounded Research** | Real-time Google Search integration for factual accuracy |
-| **Custom Tools** | Code execution, user profiling, and search capabilities |
-| **Memory Systems** | Both short-term (session) and long-term (persistent) memory |
-| **Context Management** | Intelligent token optimization and compaction |
-| **SEO Optimization** | Auto-generated titles, meta descriptions, keywords, and social captions |
-| **Quality Evaluation** | LLM-powered scoring across clarity, structure, SEO, and usefulness |
-| **Dual Interface** | Beautiful Streamlit web UI + functional CLI |
-| **Observability** | Structured JSONL logging with metrics and tracing |
+<table style="width: 100%; border-collapse: collapse; margin: 30px 0;">
+<tr>
+
+<!-- Google ADK Implementation -->
+<td style="vertical-align: top; padding: 15px; background-color: #1e1e1e; border: 1px solid #333; border-left: 4px solid #2196f3; color: white; border-radius: 8px;">
+  <h3 style="margin-top: 0; color: #64b5f6;">🏗️ Google ADK Implementation</h3>
+  <p>Built entirely on <code>google-adk</code> library using:</p>
+  <ul>
+    <li><code>Runner</code> for orchestration</li>
+    <li><code>LlmAgent</code> for agent definitions</li>
+    <li><code>InMemorySessionService</code> for state management</li>
+  </ul>
+</td>
+
+<!-- Grounded Tool Use -->
+<td style="vertical-align: top; padding: 15px; background-color: #1e1e1e; border: 1px solid #333; border-left: 4px solid #9c27b0; color: white; border-radius: 8px;">
+  <h3 style="margin-top: 0; color: #ce93d8;">🔍 Grounded Tool Use</h3>
+  <p>No guessing or hallucinations:</p>
+  <ul>
+    <li>Custom <code>GoogleSearchTool</code></li>
+    <li>Live queries via Gemini API</li>
+    <li>Real-time data fetching</li>
+    <li>Fact-checked outputs</li>
+  </ul>
+</td>
+
+<!-- Context Compaction -->
+<td style="vertical-align: top; padding: 15px; background-color: #1e1e1e; border: 1px solid #333; border-left: 4px solid #ff9800; color: white; border-radius: 8px;">
+  <h3 style="margin-top: 0; color: #ffb74d;">🧠 Context Compaction</h3>
+  <p>Intelligent memory management:</p>
+  <ul>
+    <li>Truncates long outputs strategically</li>
+    <li>Preserves critical information</li>
+    <li>Prevents token overflow</li>
+    <li>Maintains context across 6 steps</li>
+  </ul>
+</td>
+
+</tr>
+
+<!-- Row 2 -->
+<tr>
+
+<!-- Self-Correction Loop -->
+<td style="vertical-align: top; padding: 15px; background-color: #1e1e1e; border: 1px solid #333; border-left: 4px solid #4caf50; color: white; border-radius: 8px;">
+  <h3 style="margin-top: 0; color: #81c784;">🔄 Self-Correction Loop</h3>
+  <p>Quality assurance built-in:</p>
+  <ul>
+    <li>Critic Agent for editorial review</li>
+    <li>Evaluation Agent for scoring</li>
+    <li>Objective quality metrics</li>
+    <li>Reliability layer missing in raw LLMs</li>
+  </ul>
+</td>
+
+<!-- Dual Interface -->
+<td style="vertical-align: top; padding: 15px; background-color: #1e1e1e; border: 1px solid #333; border-left: 4px solid #e91e63; color: white; border-radius: 8px;">
+  <h3 style="margin-top: 0; color: #f48fb1;">💻 Dual Interface</h3>
+  <p>Use it your way:</p>
+  <ul>
+    <li><strong>CLI:</strong> Headless automation</li>
+    <li><strong>Streamlit UI:</strong> Interactive web app</li>
+    <li>Typewriter animation</li>
+    <li>Live console logs</li>
+  </ul>
+</td>
+
+<!-- Observability -->
+<td style="vertical-align: top; padding: 15px; background-color: #1e1e1e; border: 1px solid #333; border-left: 4px solid #009688; color: white; border-radius: 8px;">
+  <h3 style="margin-top: 0; color: #4db6ac;">📊 Observability</h3>
+  <p>Full transparency and debugging:</p>
+  <ul>
+    <li>JSONL structured logging</li>
+    <li>Agent execution metrics</li>
+    <li>Duration tracking</li>
+    <li>Error tracing</li>
+  </ul>
+</td>
+
+</tr>
+
+</table>
+
+---
 
 ### 🎨 UI Features
 
@@ -88,64 +164,77 @@ Modern content creators face a time-consuming workflow:
 ## 🏗 Architecture
 
 ```mermaid
-graph TD
-    A[User Input] --> B[ResearchAgent]
-    B -->|Google Search| C[OutlineAgent]
-    C -->|Context Compaction| D[DraftAgent]
-    D --> E[CriticAgent]
-    E --> F[SEOAgent]
-    F --> G[EvaluationAgent]
-    G --> H[Final Blog + Metadata + Scores]
-    
-    I[Memory Bank] -.->|Long-term| B
-    I -.-> C
-    I -.-> D
-    
-    J[Session Service] -.->|Short-term| B
-    J -.-> C
-    J -.-> D
-    
-    K[Tools] -.-> B
-    K -.-> C
-    K -.-> D
-    
-    style A fill:#e1f5ff
-    style H fill:#d4edda
-    style B fill:#fff3cd
-    style C fill:#fff3cd
-    style D fill:#fff3cd
-    style E fill:#fff3cd
-    style F fill:#fff3cd
-    style G fill:#fff3cd
+flowchart LR
+
+%% ===== STYLES =====
+classDef circle fill:#ffeeba,stroke:#ff9800,stroke-width:2px,color:#333,rx:50,ry:50;
+classDef agent fill:#e8dbff,stroke:#6c48c2,stroke-width:2px,color:#333,rx:8,ry:8;
+classDef dashed fill:#ffeeba,stroke:#ff9800,stroke-width:2px,color:#333,stroke-dasharray:5 5,rx:8,ry:8;
+
+%% ===== NODES =====
+A((User Topic)):::circle
+B[🧪 Research]:::agent
+C[📝 Outline]:::agent
+D[✍️ Draft]:::agent
+E[🦉 Critic]:::agent
+F[🚀 SEO]:::agent
+G[📊 Evaluation]:::agent
+H((✔️ Final Blog)):::circle
+GS[🔍 Google Search]:::dashed
+
+%% ===== FLOWS =====
+A --> B
+B --> C
+C --> D
+D --> E
+E --> F
+F --> G
+G --> H
+
+%% Branch to Google Search
+B -.-> GS
+
 ```
+
+---
 
 ### System Components
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     User Interface Layer                     │
-│                  (Streamlit Web UI / CLI)                    │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│                    Orchestration Layer                       │
-│              (Runner, Session Management)                    │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│                      Agent Layer                             │
-│  Research → Outline → Draft → Critic → SEO → Evaluation     │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│                       Tools Layer                            │
-│    Google Search | Code Execution | User Profile            │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│                     Memory Layer                             │
-│     Session Service | Memory Bank | Context Manager         │
-└─────────────────────────────────────────────────────────────┘
+* <p style="margin-top: 10px; font-style: italic; color: #666;">Complete agent workflow with data flow visualization</p>
+
+```mermaid
+
+flowchart TD
+
+%% ==== User Input ====
+A[🧑‍💻 User Input<br/>Topic, Tone, Audience] --> B
+
+%% ==== Multi-Agent Pipeline Box ====
+subgraph Pipeline[🤖 Multi-Agent Pipeline]
+
+    %% Research Agent
+    B[🔎 Research Agent] -->|Research Notes| C[Context Truncation 1]
+    B -->|Gather Facts| GS[🔍 Google Search Tool]
+
+    %% Outline Agent
+    C --> OA[📝 Outline Agent]
+    OA -->|Structured Plan| C2[Context Truncation 2]
+
+    %% Draft Agent
+    C2 --> D[✍️ Draft Agent]
+    D -->|Full Article Draft| C3[Context Truncation 3]
+
+    %% Critic Agent
+    C3 --> CR[🦉 Critic Agent]
+    CR -->|Refined Content| SEO[🚀 SEO Agent]
+
+    %% SEO Agent
+    SEO -->|Optimized Metadata| EVAL[📊 Evaluation Agent]
+
+end
+
+%% Final Output
+EVAL -->|Quality JSON Score| F[📄 Final Published Blog<br/>+ Evaluation Scores]
 ```
 
 ---
@@ -209,66 +298,6 @@ Input → Research → Outline → Draft → Critic → SEO → Evaluation → O
   - SEO Strength (1-10)
   - Usefulness (1-10)
   - Overall Score (1-10)
-
----
-
-## 🛠 Tools & Capabilities
-
-### 1. Google Search Tool
-
-```python
-google_search(query: str, fallback_summary: Optional[str] = None) -> str
-```
-
-- **Type:** Grounded search via Gemini 2.5
-- **Purpose:** Real-time web information retrieval
-- **Integration:** Native Gemini `google_search` capability
-- **Use Cases:** Current events, statistics, fact-checking
-- **Features:**
-  - Natural language query processing
-  - Automatic result summarization
-  - Fallback summary support
-  - Error handling
-
-### 2. Code Execution Tool
-
-```python
-code_execution_tool(code: str) -> str
-```
-
-- **Type:** Sandboxed Python execution
-- **Purpose:** Computational analysis and calculations
-- **Allowed Operations:**
-  - Readability scoring
-  - Keyword density analysis
-  - Word count calculations
-  - Basic data processing
-- **Safety:** Restricted namespace with limited built-ins
-- **Return Value:** Contents of `result` variable after execution
-
-### 3. User Profile Tool
-
-```python
-user_profile_tool(
-    action: Literal["get", "set", "append"],
-    key: str,
-    value: Optional[str] = None,
-    session_id: str = "default_session"
-) -> str
-```
-
-- **Type:** Persistent storage interface
-- **Purpose:** User preference management
-- **Operations:**
-  - **get**: Retrieve stored preferences
-  - **set**: Store new preferences
-  - **append**: Add to list-based preferences
-- **Stores:**
-  - Writing tone preferences
-  - Target audiences
-  - SEO keyword history
-  - Blog generation history
-  - Custom writing styles
 
 ---
 
@@ -368,14 +397,6 @@ The app will open at `http://localhost:8501`
 - 🧩 **Agent Steps** - View each agent's output
 - 📟 **Console Logs** - Real-time pipeline monitoring
 - 🗂 **History** - Access previous generations (up to 10)
-
-**Enhanced UI Features:**
-- Clean, modern interface with rounded corners
-- Smooth hover transitions on buttons
-- Live progress bar during generation
-- Real-time console logging
-- Toast notifications on completion
-- Session-based history management
 
 ### 🖥 Option 2: CLI Mode
 
@@ -733,36 +754,6 @@ evaluation_agent = EvaluationAgent(
 )
 ```
 
----
-
-## ✅ Kaggle Capstone Requirements
-
-This project fulfills all requirements for the **Kaggle 5-Day AI Agents Intensive Capstone (Concierge Agents Track)**:
-
-| # | Requirement | Implementation | Location |
-|---|-------------|----------------|----------|
-| **1** | **Multi-Agent System** | 6 specialized agents with distinct roles | `blog_agents/` |
-| **2** | **Google ADK** | Built entirely on ADK Runner + LlmAgent | All agents |
-| **3** | **Custom Tools** | Code execution, user profile, search | `tools/` |
-| **4** | **Memory Management** | Session + long-term memory systems | `memory/` |
-| **5** | **Context Engineering** | Intelligent truncation and compaction | `utils/context_manager.py` |
-| **6** | **Observability** | JSONL logging with metrics | `app_logging/logger.py` |
-| **7** | **Agent Evaluation** | LLM-powered quality scoring | `blog_agents/evaluation_agent.py` |
-| **8** | **Production Quality** | Error handling, logging, UI | All files |
-
-### Bonus Features
-
-- 🌐 **Dual Interface** - Web UI + CLI
-- 🔍 **Grounded Search** - Real-time Google integration
-- 📦 **Export Options** - Markdown and text downloads
-- 📚 **History** - Session-based generation tracking (up to 10)
-- 🎨 **UX Polish** - Typewriter animation, live logs, toast notifications
-- 🐳 **Docker Support** - Containerized deployment
-- 🔒 **Type Safety** - Type hints throughout codebase
-- 📖 **Documentation** - Comprehensive inline documentation
-
----
-
 ## 💡 Examples
 
 ### Example 1: Technical Tutorial
@@ -796,22 +787,6 @@ This project fulfills all requirements for the **Kaggle 5-Day AI Agents Intensiv
 - Visual descriptions
 - Practical use cases
 - SEO title: "Machine Learning Explained Simply: A Beginner's Guide"
-
-### Example 3: Professional Analysis
-
-**Input:**
-- Topic: "The impact of AI on software development productivity"
-- Tone: Professional
-- Audience: CTOs and engineering managers
-- Word Count: 1800
-
-**Output Includes:**
-- Research-backed statistics
-- Industry trends
-- Case studies
-- ROI considerations
-- Implementation strategies
-- SEO title: "AI's Impact on Developer Productivity: 2024 Analysis for CTOs"
 
 ---
 
