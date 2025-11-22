@@ -1,7 +1,7 @@
 import asyncio
 import time
 import traceback
-
+import os
 from dotenv import load_dotenv
 
 from google.genai import types
@@ -40,24 +40,14 @@ tools = [
     UserProfileTool(),
 ]
 
-
 def _assign_tools_to_agents(agent_list, tool_instances):
     for _agent in agent_list:
         _agent.tools = list(tool_instances)
 
-
 _assign_tools_to_agents(
-    [
-        research_agent,
-        outline_agent,
-        draft_agent,
-        critic_agent,
-        seo_agent,
-        evaluation_agent,
-    ],
+    [research_agent, outline_agent, draft_agent, critic_agent, seo_agent, evaluation_agent],
     tools,
 )
-
 
 async def _ensure_session():
     try:
@@ -67,12 +57,9 @@ async def _ensure_session():
             session_id=SESSION_ID,
         )
     except Exception:
-        # session may already exist
         pass
 
-
 asyncio.run(_ensure_session())
-
 
 def call_agent(runner: Runner, prompt: str, agent_name: str) -> str:
     """Call agent via Runner.run(new_message=...). Collect logs/metrics."""
@@ -94,15 +81,18 @@ def call_agent(runner: Runner, prompt: str, agent_name: str) -> str:
             extra={"traceback": traceback.format_exc()},
         )
         return error_msg
-    duration = time.perf_counter() - start
 
     final_text = ""
+    # The agent does the work inside this loop
     for event in events:
         if hasattr(event, "is_final_response") and event.is_final_response():
             if event.content and event.content.parts:
                 for part in event.content.parts:
                     if getattr(part, "text", None):
                         final_text += part.text
+
+    # <--- FIX: Timer Stops AFTER the loop finishes
+    duration = time.perf_counter() - start 
 
     if not final_text.strip():
         msg = "Error: No final response from agent."
@@ -119,7 +109,6 @@ def call_agent(runner: Runner, prompt: str, agent_name: str) -> str:
     )
     return final_text.strip()
 
-
 def _build_runner(agent):
     return Runner(
         app_name=APP_NAME,
@@ -128,7 +117,6 @@ def _build_runner(agent):
         artifact_service=artifact_service,
         memory_service=memory_service,
     )
-
 
 def run_agent_pipeline(topic: str, tone: str, audience: str, word_count: str) -> str:
     base = (
@@ -142,8 +130,6 @@ def run_agent_pipeline(topic: str, tone: str, audience: str, word_count: str) ->
     r1 = _build_runner(research_agent)
     research_prompt = base + "\nYou are ResearchAgent. Provide structured notes using google_search tool when helpful."
     research_text = call_agent(r1, research_prompt, "research_agent")
-
-    # Context compaction before passing along
     research_text = truncate_text(research_text, max_chars=6000)
 
     # 2 — Outline Agent
@@ -172,7 +158,7 @@ def run_agent_pipeline(topic: str, tone: str, audience: str, word_count: str) ->
     )
     final_text = call_agent(r5, seo_prompt, "seo_agent")
 
-    # 6 — Evaluation Agent (Agent Evaluation)
+    # 6 — Evaluation Agent
     r_eval = _build_runner(evaluation_agent)
     eval_prompt = (
         "Evaluate this blog article and return JSON as specified in your instructions.\n\n"
@@ -180,6 +166,7 @@ def run_agent_pipeline(topic: str, tone: str, audience: str, word_count: str) ->
         + final_text
     )
     eval_result = call_agent(r_eval, eval_prompt, "evaluation_agent")
+    
     app_logger.log_event(
         event_type="evaluation",
         agent="evaluation_agent",
@@ -188,30 +175,48 @@ def run_agent_pipeline(topic: str, tone: str, audience: str, word_count: str) ->
         extra={"raw_eval": eval_result},
     )
 
-    # Optionally print eval to CLI
     print("\n--- Evaluation ---")
     print(eval_result)
     print("------------------\n")
 
     return final_text
 
-
 def main():
     print("\n🧠 AI Blog Production Agent (CLI Mode)")
-    topic = input("Enter topic: ").strip()
+    try:
+        # Simple CLI args parsing for non-interactive runs
+        import sys
+        if not sys.stdin.isatty():
+            lines = sys.stdin.read().splitlines()
+            if len(lines) >= 4:
+                topic = lines[0]
+                tone = lines[1]
+                audience = lines[2]
+                wc = lines[3]
+            else:
+                # Fallback
+                topic = "AI Agents"
+                tone = "Professional"
+                audience = "Developers"
+                wc = "1000"
+        else:
+            topic = input("Enter topic: ").strip()
+            tone = input("Tone (default Professional): ").strip() or "Professional"
+            audience = input("Audience (default beginner developers): ").strip() or "beginner developers"
+            wc = input("Word count (default 1500): ").strip() or "1500"
+    except:
+        topic = "Multi-Agent Systems"
+        tone = "Professional"
+        audience = "Tech"
+        wc = "1000"
 
-    tone = input("Tone (default Professional): ").strip() or "Professional"
-    audience = input("Audience (default beginner developers): ").strip() or "beginner developers"
-    wc = input("Word count (default 1500): ").strip() or "1500"
-
-    print("\nRunning pipeline…\n")
+    print(f"\nRunning pipeline for: {topic}\n")
     blog = run_agent_pipeline(topic, tone, audience, wc)
 
     print("\n============================")
     print("📝 FINAL BLOG\n")
     print(blog)
     print("\n")
-
 
 if __name__ == "__main__":
     main()
